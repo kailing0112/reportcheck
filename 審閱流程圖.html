@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>報告書 AI 預審系統 — 完整審閱流程圖</title>
+<style>
+  :root {
+    --blue: #1e40af;
+    --blue-light: #3b82f6;
+    --blue-bg: #dbeafe;
+    --red: #dc3545;
+    --yellow: #f0ad4e;
+    --green: #16a34a;
+    --green-bg: #dcfce7;
+    --purple: #7c3aed;
+    --purple-bg: #f5f3ff;
+    --orange: #ea580c;
+    --orange-bg: #fff7ed;
+    --gray: #6b7280;
+    --gray-bg: #f3f4f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: #f0f2f5;
+    color: #333;
+    line-height: 1.6;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 50%, #3b82f6 100%);
+    color: white;
+    text-align: center;
+    padding: 40px 20px 32px;
+  }
+  .header h1 { font-size: 26px; margin-bottom: 8px; }
+  .header p { font-size: 14px; opacity: 0.85; }
+
+  /* Tab nav */
+  .tab-nav {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    background: #1e3a5f;
+    padding: 0 20px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .tab-btn {
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .tab-btn:hover { color: rgba(255,255,255,0.9); }
+  .tab-btn.active { color: white; border-bottom-color: #60a5fa; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
+
+  /* ===== TAB 1: MAIN FLOW ===== */
+  .flow-stage {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 0;
+  }
+
+  /* Vertical timeline */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 56px;
+  }
+  .timeline .dot {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 18px; color: white;
+    flex-shrink: 0;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .timeline .line {
+    width: 3px;
+    flex-grow: 1;
+    min-height: 20px;
+  }
+
+  .stage-card {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    margin-bottom: 12px;
+    border-left: 4px solid transparent;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .stage-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  .stage-card h3 { font-size: 17px; margin-bottom: 6px; }
+  .stage-card .desc { font-size: 13px; color: #555; margin-bottom: 10px; }
+  .stage-card .io-row {
+    display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px;
+  }
+  .io-tag {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+  .io-in { background: #dbeafe; color: #1e40af; }
+  .io-out { background: #dcfce7; color: #166534; }
+  .io-tool { background: #fef3c7; color: #92400e; }
+  .io-who { background: #f3e8ff; color: #6b21a8; }
+
+  /* Color themes for stages */
+  .stage-1 .dot { background: var(--gray); }
+  .stage-1 .line { background: linear-gradient(var(--gray), var(--blue-light)); }
+  .stage-1 .stage-card { border-left-color: var(--gray); }
+
+  .stage-2 .dot { background: var(--blue-light); }
+  .stage-2 .line { background: linear-gradient(var(--blue-light), var(--purple)); }
+  .stage-2 .stage-card { border-left-color: var(--blue-light); }
+
+  .stage-3 .dot { background: var(--purple); }
+  .stage-3 .line { background: linear-gradient(var(--purple), var(--orange)); }
+  .stage-3 .stage-card { border-left-color: var(--purple); }
+
+  .stage-ai .dot { background: linear-gradient(135deg, #f97316, #ef4444); width: 52px; height: 52px; font-size: 20px; }
+  .stage-ai .line { background: linear-gradient(var(--orange), var(--green)); }
+  .stage-ai .stage-card {
+    border-left-color: var(--orange);
+    border: 2px solid var(--orange);
+    background: linear-gradient(135deg, #fff7ed 0%, #fff 100%);
+  }
+
+  .stage-4 .dot { background: var(--green); }
+  .stage-4 .line { background: linear-gradient(var(--green), #0891b2); }
+  .stage-4 .stage-card { border-left-color: var(--green); }
+
+  .stage-5 .dot { background: #0891b2; }
+  .stage-5 .line { background: linear-gradient(#0891b2, #0891b2); }
+  .stage-5 .stage-card { border-left-color: #0891b2; }
+
+  .stage-cal .dot { background: #be185d; }
+  .stage-cal .line { background: #be185d; min-height: 0; }
+  .stage-cal .stage-card { border-left-color: #be185d; border: 2px dashed #be185d; background: #fdf2f8; }
+
+  /* AI Sub-flow highlight box */
+  .ai-subflow {
+    background: white;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    border: 1px solid #fed7aa;
+  }
+  .ai-subflow h4 { font-size: 14px; margin-bottom: 8px; color: var(--orange); }
+
+  .layer-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .layer-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 24px;
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 11px;
+    color: white;
+    flex-shrink: 0;
+  }
+  .layer-badge.l0 { background: #64748b; }
+  .layer-badge.l1 { background: #2563eb; }
+  .layer-badge.l2 { background: #7c3aed; }
+  .layer-badge.pm { background: #16a34a; }
+  .layer-arrow { color: #ccc; font-size: 16px; flex-shrink: 0; }
+  .layer-text { color: #555; }
+  .layer-text strong { color: #333; }
+
+  /* ===== TAB 2: THREE LAYERS ===== */
+  .layer-section {
+    background: white;
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+  .layer-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+  .layer-section.ls-l0::before { background: #64748b; }
+  .layer-section.ls-l1::before { background: #2563eb; }
+  .layer-section.ls-l2::before { background: #7c3aed; }
+  .layer-section.ls-pm::before { background: #16a34a; }
+  .layer-section.ls-out::before { background: #ea580c; }
+
+  .layer-section h3 {
+    font-size: 18px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .layer-section .subtitle { font-size: 13px; color: #888; margin-bottom: 16px; }
+
+  .kb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .kb-card {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid #e5e7eb;
+    background: #fafafa;
+  }
+  .kb-card strong { display: block; margin-bottom: 2px; font-size: 12px; }
+  .kb-card.primary { border-color: #93c5fd; background: #eff6ff; }
+
+  .check-items { font-size: 13px; }
+  .check-items li {
+    padding: 6px 0;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .check-items li:last-child { border-bottom: none; }
+  .ci-icon { flex-shrink: 0; }
+  .ci-method {
+    font-size: 11px;
+    background: #e5e7eb;
+    color: #555;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+  }
+
+  /* Big down arrow between layer sections */
+  .big-arrow {
+    text-align: center;
+    font-size: 28px;
+    color: #cbd5e1;
+    padding: 4px 0;
+  }
+
+  /* ===== TAB 3: KB STRUCTURE ===== */
+  .tree { font-size: 13px; }
+  .tree-node {
+    padding: 6px 12px;
+    margin: 4px 0;
+    border-radius: 6px;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tree-node .icon { font-size: 16px; flex-shrink: 0; }
+  .tree-children { margin-left: 28px; border-left: 2px solid #e5e7eb; padding-left: 12px; }
+  .tree-node:hover { background: #f8fafc; }
+  .tree-node.folder { font-weight: 600; color: var(--blue); }
+  .tree-node.file { color: #555; }
+  .tree-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-left: auto;
+  }
+  .tree-tag.l0 { background: #e2e8f0; color: #475569; }
+  .tree-tag.l1 { background: #dbeafe; color: #1d4ed8; }
+  .tree-tag.l2 { background: #ede9fe; color: #6d28d9; }
+  .tree-tag.shared { background: #fef9c3; color: #854d0e; }
+
+  /* ===== TAB 4: SCORING ===== */
+  .score-card {
+    background: white;
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+  }
+  .score-card h3 { font-size: 18px; margin-bottom: 16px; }
+  .formula-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .formula-box .big { font-size: 36px; color: var(--blue); }
+  .formula-box .op { color: #94a3b8; margin: 0 6px; }
+
+  .severity-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .severity-card {
+    flex: 1;
+    min-width: 180px;
+    padding: 16px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .severity-card.sev-red { background: #fef2f2; border: 2px solid var(--red); }
+  .severity-card.sev-yellow { background: #fffbeb; border: 2px solid var(--yellow); }
+  .severity-card .sev-icon { font-size: 28px; }
+  .severity-card .sev-label { font-weight: 700; font-size: 14px; margin: 4px 0; }
+  .severity-card .sev-pts { font-size: 24px; font-weight: 800; }
+
+  .threshold-bar {
+    position: relative;
+    height: 36px;
+    background: linear-gradient(90deg, #fecaca 0%, #fde68a 55%, #bbf7d0 75%, #86efac 100%);
+    border-radius: 18px;
+    margin: 20px 0 8px;
+    overflow: visible;
+  }
+  .threshold-marker {
+    position: absolute;
+    top: -8px;
+    width: 3px; height: 52px;
+    background: #333;
+    border-radius: 2px;
+  }
+  .threshold-label {
+    position: absolute;
+    top: 48px;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .threshold-zone {
+    position: absolute;
+    top: 8px;
+    font-size: 11px;
+    color: rgba(0,0,0,0.5);
+    font-weight: 600;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+    padding: 20px 0 12px;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .tab-btn { padding: 10px 14px; font-size: 12px; }
+    .stage-card { padding: 14px 16px; }
+    .kb-grid { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    .tab-nav { display: none; }
+    .tab-content { display: block !important; page-break-before: always; }
+    .tab-content:first-of-type { page-break-before: avoid; }
+    body { background: white; }
+    .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>報告書 AI 預審系統 — 完整審閱流程</h1>
+  <p>三層知識庫審閱架構｜公司審核規範 → Karen 逐段原則 → Ed/Jerry 方向性預警</p>
+</div>
+
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('main')">主流程</button>
+  <button class="tab-btn" onclick="switchTab('layers')">三層審閱</button>
+  <button class="tab-btn" onclick="switchTab('kb')">知識庫</button>
+  <button class="tab-btn" onclick="switchTab('score')">評分機制</button>
+</div>
+
+<!-- ======================== TAB 1: 主流程 ======================== -->
+<div class="tab-content active" id="tab-main">
+<div class="container">
+
+  <!-- Stage 1 -->
+  <div class="flow-stage stage-1">
+    <div class="timeline">
+      <div class="dot">1</div>
+      <div class="line"></div>
+    </div>
+    <div class="stage-card">
+      <h3>① PM 初版撰寫</h3>
+      <div class="desc">PM 依專案需求撰寫報告書初稿（服務建議書或執行報告書）。</div>
+      <div class="io-row">
+        <span class="io-tag io-who">👤 PM</span>
+        <span class="io-tag io-out">📄 初版 .docx</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 2 -->
+  <div class="flow-stage stage-2">
+    <div class="timeline">
+      <div class="dot">2</div>
+      <div class="line"></div>
+    </div>
+    <div class="stage-card">
+      <h3>② KK（直屬主管）審閱建議</h3>
+      <div class="desc">Karen 使用 Word 追蹤修訂 + 插入評論，逐字逐句細節修改。關注文字精準度、段落邏輯、圖表規範、數據一致性。</div>
+      <div class="io-row">
+        <span class="io-tag io-in">📄 初版 .docx</span>
+        <span class="io-tag io-out">📝 追蹤修訂 .docx</span>
+        <span class="io-tag io-who">👤 Karen</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 3 -->
+  <div class="flow-stage stage-3">
+    <div class="timeline">
+      <div class="dot">3</div>
+      <div class="line"></div>
+    </div>
+    <div class="stage-card">
+      <h3>③ 彙整為內審版</h3>
+      <div class="desc">PM 接受追蹤修訂、回應評論、完成修改，彙整為「內審版」，準備送大主管審閱。</div>
+      <div class="io-row">
+        <span class="io-tag io-in">📝 KK 修訂</span>
+        <span class="io-tag io-out">📄 內審版 .docx</span>
+        <span class="io-tag io-out">📑 內審版 .pdf</span>
+        <span class="io-tag io-who">👤 PM</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage AI (the star) -->
+  <div class="flow-stage stage-ai">
+    <div class="timeline">
+      <div class="dot">AI</div>
+      <div class="line"></div>
+    </div>
+    <div class="stage-card">
+      <h3>🤖 AI 預審系統介入（本系統）</h3>
+      <div class="desc">在送大主管之前，自動執行三層預審。讓大主管能聚焦在高層次判斷，不需反覆指出同樣的錯誤。</div>
+      <div class="io-row">
+        <span class="io-tag io-in">📄 .docx + 📑 .pdf</span>
+        <span class="io-tag io-tool">🧠 三層知識庫</span>
+        <span class="io-tag io-out">📊 審閱報告</span>
+        <span class="io-tag io-out">✅ 待辦清單</span>
+      </div>
+
+      <div class="ai-subflow">
+        <h4>▼ 三層審閱執行順序</h4>
+        <div class="layer-row">
+          <span class="layer-badge l0">L0</span>
+          <span class="layer-text"><strong>公司審核規範 checklist</strong>（基線）</span>
+        </div>
+        <div class="layer-row">
+          <span class="layer-arrow">↓</span>
+        </div>
+        <div class="layer-row">
+          <span class="layer-badge l1">L1</span>
+          <span class="layer-text"><strong>Karen 撰寫原則</strong>（逐段比對 + 名詞規範）</span>
+        </div>
+        <div class="layer-row">
+          <span class="layer-arrow">↓</span>
+        </div>
+        <div class="layer-row">
+          <span class="layer-badge l2">L2</span>
+          <span class="layer-text"><strong>Ed / Jerry 方向性預警</strong>（大方向 + 委員質疑）</span>
+        </div>
+        <div class="layer-row">
+          <span class="layer-arrow">↓</span>
+        </div>
+        <div class="layer-row">
+          <span class="layer-badge pm">PM</span>
+          <span class="layer-text"><strong>PM 自檢提醒</strong>（AI 無法判斷的主觀項目）</span>
+        </div>
+      </div>
+
+      <div class="ai-subflow" style="margin-top:10px;">
+        <h4>▼ 雙軌分析：docx + PDF 互補</h4>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
+          <div style="flex:1;min-width:180px;">
+            <div style="font-weight:700;color:#2563eb;margin-bottom:4px;">📄 docx XML 分析</div>
+            <div style="color:#555;">字型設定、交互參照、隱藏式超連結、段落樣式、孤行寡行控制</div>
+          </div>
+          <div style="flex:1;min-width:180px;">
+            <div style="font-weight:700;color:#dc3545;margin-bottom:4px;">📑 PDF 渲染分析</div>
+            <div style="color:#555;">圖表標號跨頁、版面留白、雙面列印奇偶頁、實際頁碼定位</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 4 -->
+  <div class="flow-stage stage-4">
+    <div class="timeline">
+      <div class="dot">4</div>
+      <div class="line"></div>
+    </div>
+    <div class="stage-card">
+      <h3>④ Ed、Jerry（大主管）審閱建議</h3>
+      <div class="desc">大主管以純文字清單提供方向性建議（標示頁碼）。AI 預審已先排除基礎問題，大主管可聚焦高層次判斷。</div>
+      <div class="io-row">
+        <span class="io-tag io-in">📊 AI 審閱報告（參考）</span>
+        <span class="io-tag io-in">📑 內審版 .pdf</span>
+        <span class="io-tag io-out">📝 Ed 建議 .txt</span>
+        <span class="io-tag io-out">📝 Jerry 建議 .txt</span>
+        <span class="io-tag io-who">👤 Ed / Jerry</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 5 -->
+  <div class="flow-stage stage-5">
+    <div class="timeline">
+      <div class="dot">5</div>
+      <div class="line"></div>
+    </div>
+    <div class="stage-card">
+      <h3>⑤ 完整版（最終定稿）→ 對外送件</h3>
+      <div class="desc">PM 彙整所有修改意見，產出最終定稿（目標 85-95 分水準），送件出去。</div>
+      <div class="io-row">
+        <span class="io-tag io-in">📝 大主管建議</span>
+        <span class="io-tag io-in">✅ AI 待辦清單</span>
+        <span class="io-tag io-out">📄 完整版 .docx / .pdf</span>
+        <span class="io-tag io-who">👤 PM</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calibration -->
+  <div class="flow-stage stage-cal">
+    <div class="timeline">
+      <div class="dot" style="font-size:16px;">🔄</div>
+      <div class="line"></div>
+    </div>
+    <div class="stage-card">
+      <h3>🔄 AI 校準點（持續改進迴路）</h3>
+      <div class="desc">用完整版反向校準評分規則、驗證 Ed/Jerry 建議落實率、提煉正面範例到知識庫。<br>目前已完成 <strong>8 份報告校準</strong>，全部落在 85-95 分預期區間。</div>
+      <div class="io-row">
+        <span class="io-tag io-in">📄 完整版</span>
+        <span class="io-tag io-tool">⚙️ 評分規則調整</span>
+        <span class="io-tag io-out">📚 知識庫更新</span>
+        <span class="io-tag io-out">⭐ 正面範例庫</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ======================== TAB 2: 三層審閱 ======================== -->
+<div class="tab-content" id="tab-layers">
+<div class="container">
+
+  <!-- L0 -->
+  <div class="layer-section ls-l0">
+    <h3><span class="layer-badge l0">L0</span> 公司審核規範 checklist（基線）</h3>
+    <div class="subtitle">每次審閱必先執行，依文件類型載入對應區塊</div>
+
+    <div class="kb-grid">
+      <div class="kb-card primary">
+        <strong>📖 知識庫</strong>
+        公司審核規範_通則.md
+      </div>
+      <div class="kb-card">
+        <strong>🔀 文件類型分流</strong>
+        A 全適用 + B 服務建議書 / C 期中期末 / D 期初
+      </div>
+    </div>
+
+    <ul class="check-items" style="list-style:none;">
+      <li><span class="ci-icon">📄</span> <strong>A. 基本樣式審查</strong>：封面、目錄、圖表參照、字型、樣式一致性 <span class="ci-method">docx XML</span></li>
+      <li><span class="ci-icon">📑</span> <strong>圖表標號不跨頁</strong>：圖/表標題與本體須在同一頁 <span class="ci-method">PDF bbox</span></li>
+      <li><span class="ci-icon">📄</span> <strong>交互參照完整性</strong>：所有圖表編號可正確連結 <span class="ci-method">docx XML</span></li>
+      <li><span class="ci-icon">📄</span> <strong>隱藏式超連結</strong>：超連結必須顯示完整 URL <span class="ci-method">docx XML</span></li>
+      <li><span class="ci-icon">📑</span> <strong>版面留白 / 雙面列印</strong>：無過多空白頁、奇偶頁正確 <span class="ci-method">PDF</span></li>
+    </ul>
+  </div>
+
+  <div class="big-arrow">⬇</div>
+
+  <!-- L1 -->
+  <div class="layer-section ls-l1">
+    <h3><span class="layer-badge l1">L1</span> Karen 撰寫原則（逐段比對）</h3>
+    <div class="subtitle">基線通過後，逐章節比對直屬主管的撰寫原則與名詞規範</div>
+
+    <div class="kb-grid">
+      <div class="kb-card primary">
+        <strong>📖 主知識庫</strong>
+        撰寫原則_Karen.md
+      </div>
+      <div class="kb-card primary">
+        <strong>📖 名詞規範</strong>
+        名詞規範總表.md + 客戶層名詞
+      </div>
+      <div class="kb-card">
+        <strong>📎 條件載入</strong>
+        服務建議書 → Section F
+      </div>
+      <div class="kb-card">
+        <strong>⭐ 參照</strong>
+        正面範例庫.md
+      </div>
+    </div>
+
+    <ul class="check-items" style="list-style:none;">
+      <li><span class="ci-icon">🔤</span> <strong>名詞比對</strong>：記錄/紀錄、計劃/計畫、優化、模版/模板、污染/汙染…等 <span class="ci-method">全文搜索</span></li>
+      <li><span class="ci-icon">✏️</span> <strong>文字精準度</strong>：錯字（介皆→介接）、重複字（將將）、口語化（壓測→壓力測試）<span class="ci-method">docx 文字</span></li>
+      <li><span class="ci-icon">📐</span> <strong>段落邏輯</strong>：過度使用「並」、人稱代詞「我們」、用字一致性 <span class="ci-method">docx 文字</span></li>
+      <li><span class="ci-icon">📊</span> <strong>圖表規範</strong>：標號連續性、標題格式、表格完整性 <span class="ci-method">docx + PDF</span></li>
+    </ul>
+  </div>
+
+  <div class="big-arrow">⬇</div>
+
+  <!-- L2 -->
+  <div class="layer-section ls-l2">
+    <h3><span class="layer-badge l2">L2</span> Ed / Jerry 方向性預警</h3>
+    <div class="subtitle">大主管視角的高層次問題，以「預警」形式提醒而非逐字修改</div>
+
+    <div class="kb-grid">
+      <div class="kb-card primary">
+        <strong>📖 Ed 知識庫</strong>
+        撰寫原則_Ed.md
+      </div>
+      <div class="kb-card primary">
+        <strong>📖 Jerry 知識庫</strong>
+        撰寫原則_Jerry.md
+      </div>
+      <div class="kb-card">
+        <strong>❓ 委員質疑</strong>
+        委員質疑清單_Jerry.md
+      </div>
+      <div class="kb-card">
+        <strong>📋 客戶備註</strong>
+        客戶_XXX/審閱備註_*.md
+      </div>
+    </div>
+
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;">
+      <div style="flex:1;min-width:200px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;">Ed 視角</div>
+        <ul class="check-items" style="list-style:none;">
+          <li><span class="ci-icon">👁️</span> 閱讀體驗與整體流暢度</li>
+          <li><span class="ci-icon">📊</span> 量化數據是否充分</li>
+          <li><span class="ci-icon">🎨</span> 視覺呈現與版面</li>
+        </ul>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:8px;">Jerry 視角</div>
+        <ul class="check-items" style="list-style:none;">
+          <li><span class="ci-icon">⚙️</span> 技術正確性與術語</li>
+          <li><span class="ci-icon">🏗️</span> 章節結構完整度</li>
+          <li><span class="ci-icon">❓</span> 委員必問議題預防</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="big-arrow">⬇</div>
+
+  <!-- PM 自檢 -->
+  <div class="layer-section ls-pm">
+    <h3><span class="layer-badge pm">PM</span> PM 自檢提醒</h3>
+    <div class="subtitle">AI 確實無法判斷的項目，歸入 PM 人工確認，並說明原因</div>
+
+    <ul class="check-items" style="list-style:none;">
+      <li><span class="ci-icon">🖼️</span> <strong>圖片解析度</strong>：主觀畫質判斷，AI 無法評估</li>
+      <li><span class="ci-icon">📊</span> <strong>圖表數據一致性</strong>：需人工交叉比對內文數字與圖表</li>
+      <li><span class="ci-icon">👤</span> <strong>截圖中人名</strong>：圖片內嵌文字無法程式讀取</li>
+      <li><span class="ci-icon">🔗</span> <strong>外部連結有效性</strong>：需人工點擊確認可開啟</li>
+    </ul>
+  </div>
+
+  <div class="big-arrow">⬇</div>
+
+  <!-- 產出 -->
+  <div class="layer-section ls-out">
+    <h3 style="color:var(--orange);">📊 審閱產出</h3>
+    <div class="subtitle">兩份獨立文件 + HTML 版本供 PM 檢視</div>
+
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px;">
+        <div style="font-weight:700;margin-bottom:6px;">📄 審閱報告</div>
+        <div style="font-size:13px;color:#555;">
+          預審分數、L0 checklist 結果、L1 逐段意見（🔴必改/🟡建議改）、L2 預警表、PM 自檢項目
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;">
+        <div style="font-weight:700;margin-bottom:6px;">✅ 待辦清單</div>
+        <div style="font-size:13px;color:#555;">
+          依嚴重度分類的可勾選待辦、B/C/D/E 分類追蹤、統計摘要、互動進度條
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ======================== TAB 3: 知識庫 ======================== -->
+<div class="tab-content" id="tab-kb">
+<div class="container">
+
+  <div style="background:white;border-radius:14px;padding:28px;box-shadow:0 1px 8px rgba(0,0,0,0.06);">
+    <h3 style="font-size:18px;margin-bottom:16px;">📁 知識庫結構與三層對應</h3>
+
+    <div class="tree">
+      <div class="tree-node folder"><span class="icon">📁</span> 00_知識庫/</div>
+      <div class="tree-children">
+
+        <div style="font-size:12px;color:#888;padding:6px 0 2px;font-weight:600;">── 三層審閱基礎 ──</div>
+
+        <div class="tree-node file"><span class="icon">📄</span> 公司審核規範_通則.md <span class="tree-tag l0">L0 基線</span></div>
+        <div class="tree-node file"><span class="icon">📄</span> 撰寫原則_Karen.md <span class="tree-tag l1">L1 逐段</span></div>
+        <div class="tree-node file"><span class="icon">📄</span> 撰寫原則_Ed.md <span class="tree-tag l2">L2 預警</span></div>
+        <div class="tree-node file"><span class="icon">📄</span> 撰寫原則_Jerry.md <span class="tree-tag l2">L2 預警</span></div>
+
+        <div style="font-size:12px;color:#888;padding:10px 0 2px;font-weight:600;">── 通則層（跨客戶共用）──</div>
+
+        <div class="tree-node file"><span class="icon">📄</span> 名詞規範總表.md <span class="tree-tag shared">L1+L2 共用</span></div>
+        <div class="tree-node file"><span class="icon">📄</span> 評分規則.md <span class="tree-tag shared">評分</span></div>
+        <div class="tree-node file"><span class="icon">📄</span> 校準紀錄.md <span class="tree-tag shared">校準</span></div>
+        <div class="tree-node file"><span class="icon">📄</span> 正面範例庫.md <span class="tree-tag shared">參照</span></div>
+        <div class="tree-node file"><span class="icon">📄</span> 原則格式範本.md <span class="tree-tag shared">範本</span></div>
+        <div class="tree-node file"><span class="icon">📄</span> 委員質疑清單_Jerry.md <span class="tree-tag l2">L2</span></div>
+
+        <div style="font-size:12px;color:#888;padding:10px 0 2px;font-weight:600;">── 客戶層（依客戶分資料夾）──</div>
+
+        <div class="tree-node folder"><span class="icon">📁</span> 客戶_NCDR/</div>
+        <div class="tree-children">
+          <div class="tree-node file"><span class="icon">📄</span> 名詞規範.md <span class="tree-tag l1">L1</span></div>
+          <div class="tree-node file"><span class="icon">📄</span> 專案備註_CPJ24005.md <span class="tree-tag shared">校準</span></div>
+          <div class="tree-node file"><span class="icon">📄</span> 專案備註_CPJ25003.md <span class="tree-tag shared">校準</span></div>
+          <div class="tree-node file"><span class="icon">📄</span> 專案備註_CPJ25013.md <span class="tree-tag shared">校準</span></div>
+          <div class="tree-node file"><span class="icon">📄</span> 審閱備註_Ed.md <span class="tree-tag l2">L2</span></div>
+          <div class="tree-node file"><span class="icon">📄</span> 審閱備註_Jerry.md <span class="tree-tag l2">L2</span></div>
+        </div>
+
+        <div class="tree-node folder"><span class="icon">📁</span> 客戶_內政部海域/</div>
+        <div class="tree-children">
+          <div class="tree-node file"><span class="icon">📄</span> 名詞規範.md <span class="tree-tag l1">L1</span></div>
+          <div class="tree-node file"><span class="icon">📄</span> 專案備註_CPJ24011.md <span class="tree-tag shared">校準</span></div>
+          <div class="tree-node file"><span class="icon">📄</span> 審閱備註_Ed.md <span class="tree-tag l2">L2</span></div>
+          <div class="tree-node file"><span class="icon">📄</span> 審閱備註_Jerry.md <span class="tree-tag l2">L2</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;padding:16px;background:#f8fafc;border-radius:10px;font-size:13px;">
+      <strong>知識庫運作原則：</strong>
+      <div style="margin-top:8px;color:#555;">
+        ① 只追加不覆蓋（保留歷史）
+        ② B/C/D/E 類 AI 不自行填補（僅提醒人工）
+        ③ 名詞規範跨來源共用（衝突時標示 ⚠️）
+        ④ 校準紀錄寫入對應客戶的專案備註
+      </div>
+    </div>
+  </div>
+
+  <div style="background:white;border-radius:14px;padding:28px;margin-top:24px;box-shadow:0 1px 8px rgba(0,0,0,0.06);">
+    <h3 style="font-size:18px;margin-bottom:16px;">📂 完整資料夾一覽</h3>
+    <div class="tree">
+      <div class="tree-node folder"><span class="icon">📁</span> 報告書審閱系統/</div>
+      <div class="tree-children">
+        <div class="tree-node folder"><span class="icon">📁</span> 00_知識庫/ <span style="font-size:11px;color:#888;margin-left:8px;">← AI 的規則大腦</span></div>
+        <div class="tree-node folder"><span class="icon">📁</span> 01_原始建議/ <span style="font-size:11px;color:#888;margin-left:8px;">← 審閱素材輸入（Karen/Ed/Jerry/共用PDF）</span></div>
+        <div class="tree-node folder"><span class="icon">📁</span> 02_待審閱/ <span style="font-size:11px;color:#888;margin-left:8px;">← AI 預審佇列</span></div>
+        <div class="tree-node folder"><span class="icon">📁</span> 03_審閱結果/ <span style="font-size:11px;color:#888;margin-left:8px;">← AI 預審產出（審閱報告 + 待辦清單）</span></div>
+        <div class="tree-node folder"><span class="icon">📁</span> 04_完整版/ <span style="font-size:11px;color:#888;margin-left:8px;">← 最終定稿（校準用）</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ======================== TAB 4: 評分機制 ======================== -->
+<div class="tab-content" id="tab-score">
+<div class="container">
+
+  <div class="score-card">
+    <h3>評分公式</h3>
+    <div class="formula-box">
+      <span class="big">100</span>
+      <span class="op">−</span>
+      <span style="color:var(--red);">🔴 × 2</span>
+      <span class="op">−</span>
+      <span style="color:var(--yellow);">🟡 × 0.5</span>
+      <span class="op">=</span>
+      <span class="big" style="color:var(--green);">分數</span>
+    </div>
+
+    <div class="severity-row">
+      <div class="severity-card sev-red">
+        <div class="sev-icon">🔴</div>
+        <div class="sev-label">必改</div>
+        <div class="sev-pts">−2 分/項</div>
+        <div style="font-size:12px;color:#666;margin-top:4px;">錯字、名詞錯誤、格式嚴重違規</div>
+      </div>
+      <div class="severity-card sev-yellow">
+        <div class="sev-icon">🟡</div>
+        <div class="sev-label">建議改</div>
+        <div class="sev-pts">−0.5 分/項</div>
+        <div style="font-size:12px;color:#666;margin-top:4px;">用詞風格、口語化、可優化項目</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:24px;">送審門檻</h3>
+    <div class="threshold-bar">
+      <div class="threshold-marker" style="left:15%;">
+        <div class="threshold-label" style="color:var(--red);">不合格</div>
+      </div>
+      <div class="threshold-marker" style="left:85%;">
+        <div class="threshold-label" style="color:var(--green);">85 分門檻</div>
+      </div>
+      <div class="threshold-zone" style="left:5%;">退回修改</div>
+      <div class="threshold-zone" style="left:42%;">需改善</div>
+      <div class="threshold-zone" style="left:88%;">可送審</div>
+    </div>
+  </div>
+
+  <div class="score-card">
+    <h3>校準實績（8 份報告）</h3>
+    <div style="font-size:13px;color:#666;margin-bottom:16px;">完整版（最終定稿）校準結果，全部落在 85-95 分預期區間</div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#1e40af;color:white;">
+          <th style="padding:10px;text-align:left;border-radius:8px 0 0 0;">#</th>
+          <th style="padding:10px;text-align:left;">專案</th>
+          <th style="padding:10px;text-align:left;">類型</th>
+          <th style="padding:10px;text-align:center;">分數</th>
+          <th style="padding:10px;text-align:center;">🔴</th>
+          <th style="padding:10px;text-align:center;border-radius:0 8px 0 0;">🟡</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:8px;">1</td><td>CPJ25003 期末</td><td>NCDR</td><td style="text-align:center;font-weight:700;color:var(--green);">92.5</td><td style="text-align:center;">3</td><td style="text-align:center;">3</td></tr>
+        <tr style="background:#f8fafc;"><td style="padding:8px;">2</td><td>CPJ25003 期中</td><td>NCDR</td><td style="text-align:center;font-weight:700;color:var(--green);">90.0</td><td style="text-align:center;">4</td><td style="text-align:center;">4</td></tr>
+        <tr><td style="padding:8px;">3</td><td>CPJ25013 期中</td><td>NCDR</td><td style="text-align:center;font-weight:700;color:var(--green);">92.0</td><td style="text-align:center;">3</td><td style="text-align:center;">4</td></tr>
+        <tr style="background:#f8fafc;"><td style="padding:8px;">4</td><td>CPJ24011 期末</td><td>內政部海域</td><td style="text-align:center;font-weight:700;color:var(--green);">91.5</td><td style="text-align:center;">3</td><td style="text-align:center;">5</td></tr>
+        <tr><td style="padding:8px;">5</td><td>CPJ24005 期末</td><td>NCDR</td><td style="text-align:center;font-weight:700;color:var(--yellow);">85.0</td><td style="text-align:center;">6</td><td style="text-align:center;">6</td></tr>
+        <tr style="background:#f8fafc;"><td style="padding:8px;">6</td><td>CPJ25003 期初</td><td>NCDR</td><td style="text-align:center;font-weight:700;color:var(--green);">87.5</td><td style="text-align:center;">5</td><td style="text-align:center;">5</td></tr>
+        <tr><td style="padding:8px;">7</td><td>CPJ25013 期初</td><td>NCDR</td><td style="text-align:center;font-weight:700;color:var(--green);">92.0</td><td style="text-align:center;">3</td><td style="text-align:center;">4</td></tr>
+        <tr style="background:#f8fafc;"><td style="padding:8px;border-radius:0 0 0 8px;">8</td><td>CPJ25013 服務建議書</td><td>NCDR</td><td style="text-align:center;font-weight:700;color:var(--green);">86.0</td><td style="text-align:center;">6</td><td style="text-align:center;border-radius:0 0 8px 0;">4</td></tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top:16px;padding:12px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;color:#166534;">
+      <strong>校準結論：</strong>平均分數 89.6 分，標準差 2.9 分，評分機制穩定可靠。知識庫隨校準持續增長，新專案審閱精準度將逐步提升。
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="footer">
+  報告書 AI 預審系統 — 流程圖 · 2026-03-17
+</div>
+
+<script>
+function switchTab(name){
+  document.querySelectorAll('.tab-content').forEach(function(el){ el.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById('tab-' + name).classList.add('active');
+  // Find the matching button
+  var btns = document.querySelectorAll('.tab-btn');
+  var map = { main: 0, layers: 1, kb: 2, score: 3 };
+  if(map[name] !== undefined) btns[map[name]].classList.add('active');
+}
+</script>
+
+</body>
+</html>
